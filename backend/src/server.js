@@ -16,9 +16,27 @@ const app = express();
 const isProd = process.env.NODE_ENV === "production";
 app.set("trust proxy", 1);
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+const allowedOrigins = (
+  process.env.CLIENT_ORIGIN ||
+  "https://ilmora-kappa.vercel.app,http://localhost:5173"
+)
+  .split(",")
+  .map((origin) => origin.trim().replace(/\\/$/, ""))
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN?.split(",") || "http://localhost:5173",
+    origin: (origin, callback) => {
+      // Allow server-to-server requests and health checks without an Origin header.
+      if (!origin) return callback(null, true);
+
+      const normalizedOrigin = origin.trim().replace(/\\/$/, "");
+      if (allowedOrigins.includes(normalizedOrigin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Origin not allowed by CORS"));
+    },
     credentials: true,
   }),
 );
