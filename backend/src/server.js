@@ -306,12 +306,29 @@ app.use((err, req, res, next) => {
 });
 
 const start = async () => {
-  await mongoose.connect(process.env.MONGODB_URI);
+  const mongoUri = process.env.MONGODB_URI?.trim();
+
+  if (!mongoUri) {
+    throw new Error(
+      "MONGODB_URI is missing. Configure it in the hosting provider's environment variables.",
+    );
+  }
+
+  if (
+    isProd &&
+    /(?:localhost|127\.0\.0\.1)(?::\d+)?/i.test(mongoUri)
+  ) {
+    throw new Error(
+      "MONGODB_URI points to localhost. Production must use a reachable hosted MongoDB URI, such as MongoDB Atlas.",
+    );
+  }
+
+  await mongoose.connect(mongoUri);
   app.listen(process.env.PORT || 5000, () =>
     console.log(`ILMORA API listening on ${process.env.PORT || 5000}`),
   );
 };
 start().catch((e) => {
-  console.error(e);
+  console.error("ILMORA API startup failed:", e.message);
   process.exit(1);
 });
