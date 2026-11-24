@@ -21,7 +21,7 @@ const allowedOrigins = (
   "https://ilmora-kappa.vercel.app,http://localhost:5173"
 )
   .split(",")
-  .map((origin) => origin.trim().replace(/\\/$/, ""))
+  .map((origin) => origin.trim().replace(/\/$/, ""))
   .filter(Boolean);
 
 app.use(
@@ -30,7 +30,7 @@ app.use(
       // Allow server-to-server requests and health checks without an Origin header.
       if (!origin) return callback(null, true);
 
-      const normalizedOrigin = origin.trim().replace(/\\/$/, "");
+      const normalizedOrigin = origin.trim().replace(/\/$/, "");
       if (allowedOrigins.includes(normalizedOrigin)) {
         return callback(null, true);
       }
