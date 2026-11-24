@@ -16,6 +16,8 @@ npm install
 
 Set `MONGODB_URI`, a long random `JWT_SECRET`, `CLIENT_ORIGIN`, and the initial admin credentials in `.env`.
 
+For local development, `MONGODB_URI=mongodb://127.0.0.1:27017/ILMORA_institute` is suitable when MongoDB is running on your computer.
+
 ## 2. Seed the database
 
 ```bash
@@ -46,9 +48,26 @@ Open http://localhost:5173. Admin: http://localhost:5173/admin/login.
 The seed script reads `ADMIN_USERNAME` and `ADMIN_PASSWORD` from the backend environment. Defaults are `admin` and `ChangeMe123!` only when those variables are not supplied. Set your own credentials before running the seed script.
 
 ## Deployment
-- Deploy `backend/` to Render, Railway, Fly.io or a Node host. Set all backend environment variables. Use a managed MongoDB database.
-- Deploy `frontend/` to Vercel or Netlify. Set `VITE_API_URL` to the deployed API origin (no trailing slash).
+
+### Backend on Render
+1. Create a MongoDB Atlas cluster and a database user. In Atlas Network Access, allow connections from your deployment host (for a quick initial setup, Atlas documents the `0.0.0.0/0` option; restrict this where practical).
+2. Copy the Atlas connection string. Replace the username, password and database name with your actual values. URL-encode special characters in the database password.
+3. Create a Render **Web Service** for this repository and set **Root Directory** to `backend`.
+4. Set **Build Command** to `npm install` and **Start Command** to `npm start`.
+5. In Render → service → Environment, add:
+   - `NODE_ENV` = `production`
+   - `MONGODB_URI` = your MongoDB Atlas URI (usually starts with `mongodb+srv://`; never use localhost on Render)
+   - `JWT_SECRET` = a long, random secret
+   - `CLIENT_ORIGIN` = the exact deployed frontend origin, without a trailing slash
+   - `ADMIN_USERNAME` and `ADMIN_PASSWORD` = your own strong initial admin credentials
+6. Save the variables and redeploy. Check `https://YOUR-RENDER-SERVICE.onrender.com/api/health`; it should return `{"ok":true}`.
+
+### Frontend on Vercel or Netlify
+- Set `VITE_API_URL` to the deployed backend origin (no trailing slash).
 - Set backend `CLIENT_ORIGIN` to the exact deployed frontend origin.
+- Redeploy the frontend after changing its environment variable.
+
+### Other production notes
 - Enable HTTPS. Cookies are `httpOnly`, `secure` in production and `sameSite=lax`.
 - Configure `ADMIN_EMAIL` and SMTP variables to enable email notifications.
 - Uploads are stored locally in `backend/uploads`; for multi-instance production, replace this with S3/Cloudinary storage and a CDN.
